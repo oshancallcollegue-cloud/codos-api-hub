@@ -249,7 +249,14 @@
 <section id="catalog" class="hidden wrap-narrow">
   <span class="label">The catalog</span>
   <h2 style="font-size:36px;margin:14px 0 26px">All APIs</h2>
+  <p class="lead" style="margin:-14px 0 26px">Click any service to open its own page — pricing, your key, live testing, and docs.</p>
   <div id="catalog-apis" class="apis"></div>
+</section>
+
+<!-- ============ SINGLE SERVICE PAGE (one per API) ============ -->
+<section id="service" class="hidden wrap-narrow">
+  <button class="btn dark" style="margin-bottom:22px" onclick="show('catalog')">← All APIs</button>
+  <div id="service-body"><p style="color:var(--muted)">Loading…</p></div>
 </section>
 
 <!-- ================= PRICING ================= -->

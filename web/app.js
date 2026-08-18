@@ -24,7 +24,7 @@ if (configured) {
 }
 
 let mode = "signup";
-const SECTIONS = ["landing", "auth", "dashboard", "catalog", "pricing"];
+const SECTIONS = ["landing", "auth", "dashboard", "catalog", "pricing", "service"];
 window.show = function (id) {
   SECTIONS.forEach((s) => document.getElementById(s).classList.toggle("hidden", s !== id));
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -48,13 +48,78 @@ async function getApis() {
 }
 async function renderCatalog(targetId) {
   const apis = await getApis();
+  const clickable = targetId === "catalog-apis"; // catalog cards open the service page
   document.getElementById(targetId).innerHTML = apis.map((a) => `
-    <div class="api-card">
+    <div class="api-card"${clickable ? ` style="cursor:pointer" onclick="openService('${a.slug}')"` : ""}>
       <div class="top"><h3>${a.name}</h3><span class="cost">${a.credit_cost} cr</span></div>
       <p>${a.description || ""}</p>
-      <span class="slug">POST /api/gateway/${a.slug}</span>
+      <span class="slug">${clickable ? "Open service →" : `POST /api/gateway/${a.slug}`}</span>
     </div>`).join("");
 }
+
+// ---------- single service page ----------
+window.openService = async function (slug) {
+  show("service");
+  const body = document.getElementById("service-body");
+  body.innerHTML = `<p style="color:var(--muted)">Loading ${slug}…</p>`;
+  const apis = await getApis();
+  const a = apis.find((x) => x.slug === slug);
+  if (!a) { body.innerHTML = `<div class="msg err">Service not found.</div>`; return; }
+
+  // this user's balance for just this service
+  let bal = "—";
+  if (db && auth?.currentUser) {
+    try {
+      const c = await getDoc(doc(db, "credits", auth.currentUser.uid));
+      bal = c.exists() ? (c.data().balances?.[slug] ?? 0) : 0;
+    } catch { bal = "—"; }
+  }
+
+  const testBody = JSON.stringify(a.test_body || {}, null, 2);
+  const curl =
+    `curl -X POST "${BACKEND_URL}/api/gateway/${slug}" \\\n` +
+    `  -H "x-api-key: ${LAST_KEY || "YOUR_KEY"}" \\\n` +
+    `  -H "Content-Type: application/json" \\\n` +
+    `  -d '${JSON.stringify(a.test_body || {})}'`;
+
+  body.innerHTML = `
+    <span class="label">Service</span>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;margin:12px 0 8px">
+      <h2 style="font-size:40px;margin:0">${a.name}</h2>
+      <div style="text-align:right">
+        <div style="font-family:var(--serif);font-size:44px;color:var(--gold);line-height:1">${bal}</div>
+        <div style="color:var(--muted);font-size:13px">your credits · ${a.credit_cost}/call</div>
+      </div>
+    </div>
+    <p class="lead" style="max-width:640px">${a.description || ""}</p>
+
+    <div class="panel" style="margin-top:24px">
+      <h3>Your API key</h3>
+      <div id="svc-key">
+        <p style="color:var(--muted);font-size:14px;margin-top:0">One key works for every service. Generate it once.</p>
+        <button class="btn gold" onclick="createKey()">Generate API key</button>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:16px">
+      <h3>Test this API</h3>
+      <p style="color:var(--muted);font-size:13.5px;margin-top:0">Sends a real call through the gateway with this sample payload:</p>
+      <pre class="code">${testBody.replace(/</g, "&lt;")}</pre>
+      <button class="btn gold" onclick="testService('${slug}')">Run test</button>
+      <div id="test-${slug}" style="margin-top:12px"></div>
+    </div>
+
+    <div class="panel" style="margin-top:16px">
+      <h3>Call it from code</h3>
+      <pre class="code">${curl.replace(/</g, "&lt;")}</pre>
+    </div>`;
+
+  if (LAST_KEY) {
+    document.getElementById("svc-key").innerHTML =
+      `<div class="key-box">${LAST_KEY}</div>
+       <p style="color:var(--muted);font-size:12px;margin:8px 0 0">Active key for this session.</p>`;
+  }
+};
 
 // ---------- nav ----------
 function refreshNav(user) {
