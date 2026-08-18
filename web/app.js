@@ -30,6 +30,7 @@ window.show = function (id) {
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (id === "dashboard") loadDashboard();
   if (id === "catalog") renderCatalog("catalog-apis");
+  if (id === "pricing") renderCatalog("pricing-apis");
 };
 function msg(el, text, kind = "err") {
   document.getElementById(el).innerHTML = text ? `<div class="msg ${kind}">${text}</div>` : "";
@@ -95,16 +96,20 @@ document.getElementById("auth-submit").onclick = async () => {
 window.logout = async function () { if (auth) await signOut(auth); show("landing"); };
 
 // ---------- dashboard ----------
-async function loadDashboard() {
-  if (!db) { document.getElementById("balance").textContent = "100"; return; }
+let LAST_KEY = null; // the plaintext key from the most recent generate (memory only)
+
+window.loadDashboard = async function loadDashboard() {
+  if (!db) return;
   const user = auth.currentUser;
   if (!user) return show("auth");
 
-  // balance
+  // per-service balances
+  let balances = {};
   try {
     const c = await getDoc(doc(db, "credits", user.uid));
-    document.getElementById("balance").textContent = c.exists() ? (c.data().balance ?? 0) : "0";
-  } catch { document.getElementById("balance").textContent = "—"; }
+    balances = c.exists() ? (c.data().balances || {}) : {};
+  } catch { /* ignore */ }
+  await renderServices(balances);
 
   // keys
   try {
@@ -133,6 +138,74 @@ async function loadDashboard() {
   } catch { /* index may be building */ }
 }
 
+// ---------- per-service panels: balance + price + Test button + curl ----------
+async function renderServices(balances) {
+  const apis = await getApis();
+  const target = document.getElementById("services");
+  if (!target) return;
+  target.innerHTML = apis.map((a) => {
+    const bal = balances[a.slug] ?? 0;
+    const body = JSON.stringify(a.test_body || {});
+    const curl =
+      `curl -X POST "${BACKEND_URL}/api/gateway/${a.slug}" \\\n` +
+      `  -H "x-api-key: ${LAST_KEY || "YOUR_KEY"}" \\\n` +
+      `  -H "Content-Type: application/json" \\\n` +
+      `  -d '${body}'`;
+    return `
+      <div class="panel" style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+          <div>
+            <h3 style="margin:0">${a.name}</h3>
+            <p style="color:var(--muted);font-size:13.5px;margin:6px 0 0">${a.description || ""}</p>
+          </div>
+          <div style="text-align:right;white-space:nowrap">
+            <div style="font-family:var(--serif);font-size:30px;color:var(--gold);line-height:1">${bal}</div>
+            <div style="color:var(--muted);font-size:12px">credits · ${a.credit_cost}/call</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+          <button class="btn gold" onclick="testService('${a.slug}')">Test this API</button>
+          <button class="btn dark" onclick="toggleCurl('${a.slug}')">Show curl</button>
+        </div>
+        <div id="test-${a.slug}" style="margin-top:12px"></div>
+        <pre id="curl-${a.slug}" class="code hidden" style="margin-top:12px">${curl.replace(/</g,"&lt;")}</pre>
+      </div>`;
+  }).join("");
+}
+
+window.toggleCurl = function (slug) {
+  document.getElementById(`curl-${slug}`).classList.toggle("hidden");
+};
+
+// Make a REAL call through the gateway with the user's key.
+window.testService = async function (slug) {
+  const out = document.getElementById(`test-${slug}`);
+  if (!LAST_KEY) {
+    out.innerHTML = `<div class="msg err">Generate an API key first (top of the page), then test.</div>`;
+    return;
+  }
+  out.innerHTML = `<div class="msg" style="background:var(--ink);color:var(--muted)">Calling ${slug}…</div>`;
+  const apis = await getApis();
+  const api = apis.find((x) => x.slug === slug) || {};
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/gateway/${slug}`, {
+      method: "POST",
+      headers: { "x-api-key": LAST_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify(api.test_body || {}),
+    });
+    const j = await res.json();
+    const ok = res.status < 400;
+    out.innerHTML = `<div class="msg ${ok ? "ok" : "err"}">
+        <b>${ok ? "✓ Key works" : "✗ Failed"}</b> · HTTP ${res.status}
+        ${j.credits_remaining != null ? ` · ${j.credits_remaining} ${slug} credits left` : ""}
+      </div>
+      <pre class="code" style="margin-top:8px">${JSON.stringify(j, null, 2).replace(/</g,"&lt;")}</pre>`;
+    loadDashboard(); // refresh balances
+  } catch (e) {
+    out.innerHTML = `<div class="msg err">Could not reach backend: ${String(e)}</div>`;
+  }
+};
+
 // ---------- create key (calls the Vercel backend) ----------
 window.createKey = async function () {
   if (!auth || !auth.currentUser) return alert("Log in first.");
@@ -145,10 +218,12 @@ window.createKey = async function () {
     });
     const j = await res.json();
     if (j.api_key) {
+      LAST_KEY = j.api_key; // remember so Test buttons + curl can use it this session
       document.getElementById("key-area").innerHTML =
         `<p class="msg ok">Save this now — it won't be shown again:</p>
          <div class="key-box">${j.api_key}</div>
          <button class="btn dark" style="margin-top:12px" onclick="loadDashboard()">Done</button>`;
+      loadDashboard(); // refresh curl commands with the real key
     } else {
       alert(j.error || "Could not create key.");
     }

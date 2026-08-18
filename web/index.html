@@ -224,33 +224,24 @@
 <section id="dashboard" class="hidden wrap-narrow">
   <span class="label">Your workspace</span>
   <h2 style="font-size:36px;margin:14px 0 26px">Dashboard</h2>
-  <div class="dash-grid">
-    <div class="panel">
-      <h3>Credit balance</h3>
-      <div class="balance" id="balance">—</div>
-      <p style="color:var(--muted);font-size:13.5px;margin-top:12px">Free tier grants 100 credits on signup.</p>
-    </div>
-    <div class="panel">
-      <h3>Your API key</h3>
-      <div id="key-area">
-        <p style="color:var(--muted);font-size:14px;margin-top:0">Generate a key to start calling APIs.</p>
-        <button class="btn gold" onclick="createKey()">Generate API key</button>
-      </div>
+  <div class="panel" style="margin-bottom:20px">
+    <h3>Your API key</h3>
+    <div id="key-area">
+      <p style="color:var(--muted);font-size:14px;margin-top:0">Generate one key — it works for every service below. Each service has its own credit balance and price.</p>
+      <button class="btn gold" onclick="createKey()">Generate API key</button>
     </div>
   </div>
-  <div class="panel" style="margin-bottom:20px">
+
+  <span class="label">Your services</span>
+  <h3 style="font-size:22px;margin:12px 0 16px">Balances, testing &amp; curl per API</h3>
+  <div id="services"><p style="color:var(--muted)">Loading services…</p></div>
+
+  <div class="panel" style="margin-top:20px">
     <h3>Recent usage</h3>
     <table>
       <thead><tr><th>When</th><th>API</th><th>Credits</th><th>Status</th></tr></thead>
       <tbody id="usage-body"><tr><td colspan="4" style="color:var(--muted)">No calls yet.</td></tr></tbody>
     </table>
-  </div>
-  <div class="panel">
-    <h3>How to call an API</h3>
-    <div class="code" id="curl-sample">curl -X POST "https://YOUR-BACKEND.vercel.app/api/gateway/email" \
-  -H "x-api-key: YOUR_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{ "to":"a@b.com", "subject":"Hi {{name}}", "html":"&lt;b&gt;Hello&lt;/b&gt;", "variables":{"name":"Sam"} }'</div>
   </div>
 </section>
 
@@ -265,9 +256,10 @@
 <section id="pricing" class="hidden wrap-narrow">
   <div class="head">
     <span class="label">Pricing</span>
-    <h2>Simple, credit-based pricing</h2>
-    <p class="lead">Start free. Upgrade only when you need more credits.</p>
+    <h2>Per-service credits</h2>
+    <p class="lead">Each API has its own balance and its own price per call. Top up only the services you use.</p>
   </div>
+  <div class="apis" id="pricing-apis" style="margin-bottom:36px"></div>
   <div class="prices">
     <div class="price-card">
       <span class="tier">Free</span>

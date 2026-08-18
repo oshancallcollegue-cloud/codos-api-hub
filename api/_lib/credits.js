@@ -6,23 +6,34 @@
 
 const { db, admin } = require("./firebase");
 
-async function deductCredits(userId, amount) {
+// Deduct `amount` from a SPECIFIC service's balance (balances.<service>).
+// Returns the new balance for that service, or -1 if there weren't enough.
+// A negative amount refunds. Falls back gracefully if the doc is old-style.
+async function deductCredits(userId, amount, service) {
   const ref = db.collection("credits").doc(userId);
   try {
     return await db.runTransaction(async (tx) => {
       const snap = await tx.get(ref);
-      const balance = snap.exists ? (snap.data().balance || 0) : 0;
+      const data = snap.exists ? snap.data() : {};
+      const balances = data.balances || {};
+      const balance = balances[service] || 0;
 
       // refund (negative amount) always allowed
       if (amount < 0) {
         const nb = balance - amount; // minus a negative = add
-        tx.set(ref, { balance: nb, updated_at: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+        tx.set(ref, {
+          balances: { ...balances, [service]: nb },
+          updated_at: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
         return nb;
       }
 
-      if (balance < amount) return -1; // not enough
+      if (balance < amount) return -1; // not enough for this service
       const nb = balance - amount;
-      tx.set(ref, { balance: nb, updated_at: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      tx.set(ref, {
+        balances: { ...balances, [service]: nb },
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
       return nb;
     });
   } catch (e) {
@@ -40,7 +51,12 @@ async function ensureUserSetup(userId, email) {
     writes.push(profileRef.set({ email: email || null, plan: "free", created_at: admin.firestore.FieldValue.serverTimestamp() }));
   }
   if (!c.exists) {
-    writes.push(creditsRef.set({ balance: 100, free_granted: true, updated_at: admin.firestore.FieldValue.serverTimestamp() }));
+    // Each service starts with its own free balance.
+    writes.push(creditsRef.set({
+      balances: { email: 50, gdocs: 25, sheets: 50, drive: 25, screenshot: 50 },
+      free_granted: true,
+      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    }));
   }
   await Promise.all(writes);
 }

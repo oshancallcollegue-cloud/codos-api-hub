@@ -40,10 +40,10 @@ module.exports = async (req, res) => {
   const api = apiSnap.data();
   const cost = api.credit_cost || 1;
 
-  // ---- deduct credits atomically ----
-  const newBalance = await deductCredits(auth.userId, cost);
+  // ---- deduct credits atomically from THIS service's balance ----
+  const newBalance = await deductCredits(auth.userId, cost, slug);
   if (newBalance === -1) {
-    return sendJson(res, 402, { error: "Not enough credits. Top up or subscribe." });
+    return sendJson(res, 402, { error: `Not enough ${slug} credits. Top up ${slug} to continue.` });
   }
 
   // ---- forward to the upstream API ----
@@ -66,7 +66,7 @@ module.exports = async (req, res) => {
   }
 
   // ---- refund on 5xx, log usage ----
-  if (upstreamStatus >= 500) await deductCredits(auth.userId, -cost);
+  if (upstreamStatus >= 500) await deductCredits(auth.userId, -cost, slug);
   await db.collection("usage_logs").add({
     user_id: auth.userId, api_slug: slug,
     credits_used: upstreamStatus >= 500 ? 0 : cost,
