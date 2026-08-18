@@ -1,0 +1,12 @@
+{
+  "name": "api-hub-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API marketplace backend — Vercel serverless functions + Firebase",
+  "scripts": {
+    "seed": "node scripts/seed-apis.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  }
+}

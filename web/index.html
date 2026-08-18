@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>API Hub — One key for every API</title>
+<meta name="description" content="Sign up, get free credits, generate one API key, and call any API for your daily tasks. Subscribe when you need more." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --navy:#0d1524; --navy2:#111c30; --ink:#0b1220;
+    --cream:#f4efe7; --cream2:#ece5d8;
+    --gold:#d8a94b; --gold2:#c8973a;
+    --text:#eef1f7; --muted:#9aa6bd; --dark-text:#1b2536; --dark-muted:#5b6577;
+    --line:rgba(255,255,255,.09); --line-d:rgba(20,30,50,.12);
+    --good:#2f9e6f; --bad:#c0503f; --radius:16px;
+    --serif:'Fraunces',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:var(--sans);background:var(--navy);color:var(--text);-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3{font-family:var(--serif);font-weight:400;letter-spacing:-.01em}
+
+  header{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+    padding:16px 40px;background:rgba(13,21,36,.72);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:22px;font-weight:600}
+  .brand .mark{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1206;font-weight:700;font-family:var(--sans);font-size:15px}
+  .brand em{color:var(--gold);font-style:normal}
+  nav{display:flex;align-items:center;gap:8px}
+  nav a,nav button{font-family:var(--sans);font-size:14px;font-weight:500;color:var(--muted);background:none;border:none;cursor:pointer;padding:9px 14px;border-radius:9px}
+  nav a:hover,nav button:hover{color:var(--text)}
+  .btn{font-family:var(--sans);cursor:pointer;font-weight:600;font-size:14px;border-radius:11px;padding:11px 20px;border:1px solid transparent;transition:.15s}
+  .btn.gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1206}
+  .btn.gold:hover{filter:brightness(1.06)}
+  .btn.dark{background:var(--navy2);color:var(--text);border-color:var(--line)}
+  .btn.dark:hover{background:#16233b}
+  .btn.outline{background:transparent;color:var(--dark-text);border-color:var(--line-d)}
+  .btn.block{width:100%}
+  .arrow::after{content:" →"}
+
+  section{scroll-margin-top:80px}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 40px}
+  .label{display:inline-flex;align-items:center;gap:8px;font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+  .label::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold)}
+  .on-cream .label{color:var(--gold2)}
+  .center{text-align:center}
+  .hidden{display:none}
+
+  .hero{position:relative;padding:120px 0 130px;text-align:center;
+    background:radial-gradient(900px 500px at 50% -10%,rgba(216,169,75,.14),transparent),var(--navy)}
+  .hero .label{justify-content:center;margin-bottom:26px}
+  .hero h1{font-size:clamp(42px,7vw,78px);line-height:1.03;margin:0 auto 22px;max-width:12ch}
+  .hero h1 .it{font-style:italic;color:#cdd5e6}
+  .hero p{color:var(--muted);font-size:19px;line-height:1.6;max-width:600px;margin:0 auto 34px}
+  .hero .cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .hero .btn{padding:14px 26px;font-size:15px}
+
+  .on-cream{background:var(--cream);color:var(--dark-text)}
+  .on-cream h2{color:var(--dark-text)}
+  .on-cream .lead{color:var(--dark-muted)}
+  .block-pad{padding:90px 0}
+  .head{text-align:center;max-width:640px;margin:0 auto 54px}
+  .head h2{font-size:clamp(30px,4.4vw,46px);margin:16px 0 12px;line-height:1.08}
+  .lead{color:var(--muted);font-size:17px;line-height:1.6}
+
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+  .step{position:relative;padding-top:14px}
+  .step .n{font-family:var(--serif);font-size:15px;color:var(--gold2);font-weight:600;letter-spacing:.1em}
+  .step h3{font-size:20px;margin:12px 0 8px;color:var(--dark-text)}
+  .step p{color:var(--dark-muted);font-size:14.5px;line-height:1.55}
+  .step::before{content:"";position:absolute;top:0;left:0;width:34px;height:2px;background:var(--gold)}
+
+  .apis{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .api-card{background:var(--navy2);border:1px solid var(--line);border-radius:var(--radius);padding:26px;transition:.18s}
+  .api-card:hover{border-color:rgba(216,169,75,.4);transform:translateY(-3px)}
+  .api-card .top{display:flex;align-items:center;justify-content:space-between}
+  .api-card h3{font-size:21px;color:var(--text);margin:0}
+  .cost{font-family:var(--sans);font-size:12px;font-weight:700;color:var(--gold);background:rgba(216,169,75,.12);border:1px solid rgba(216,169,75,.3);padding:4px 10px;border-radius:999px}
+  .api-card p{color:var(--muted);font-size:14.5px;line-height:1.55;margin:14px 0 16px}
+  .slug{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--muted);background:var(--ink);border:1px solid var(--line);padding:5px 10px;border-radius:8px}
+
+  .stats{background:var(--ink);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;text-align:center}
+  .stat .num{font-family:var(--serif);font-size:44px;color:var(--gold);line-height:1}
+  .stat .cap{color:var(--muted);font-size:13.5px;margin-top:10px}
+
+  .auth-card{max-width:420px;margin:0 auto;background:var(--navy2);border:1px solid var(--line);border-radius:20px;padding:36px}
+  .auth-card h2{font-size:28px;margin:0 0 6px}
+  .auth-card .sub{color:var(--muted);font-size:14px;margin-bottom:22px}
+  label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px;font-weight:500}
+  input{width:100%;padding:13px 15px;border-radius:11px;border:1px solid var(--line);background:var(--ink);color:var(--text);font-size:15px;font-family:var(--sans)}
+  input:focus{outline:none;border-color:var(--gold)}
+  .switch{text-align:center;color:var(--muted);font-size:13.5px;margin-top:18px}
+  .switch a{color:var(--gold);font-weight:600}
+  .msg{padding:11px 15px;border-radius:11px;font-size:14px;margin:12px 0}
+  .msg.err{background:rgba(192,80,63,.14);color:#f0a99e;border:1px solid rgba(192,80,63,.35)}
+  .msg.ok{background:rgba(47,158,111,.14);color:#8fe0bd;border:1px solid rgba(47,158,111,.35)}
+
+  .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+  .panel{background:var(--navy2);border:1px solid var(--line);border-radius:var(--radius);padding:26px}
+  .panel h3{font-size:19px;margin:0 0 14px;color:var(--text)}
+  .balance{font-family:var(--serif);font-size:56px;color:var(--gold);line-height:1}
+  .key-box{font-family:ui-monospace,Menlo,monospace;background:var(--ink);border:1px dashed var(--gold);border-radius:11px;padding:13px 15px;word-break:break-all;font-size:13px;color:#8fe0bd}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:11px 8px;border-bottom:1px solid var(--line);font-size:13.5px}
+  th{color:var(--muted);font-weight:600}
+  .code{font-family:ui-monospace,Menlo,monospace;background:var(--ink);border:1px solid var(--line);border-radius:11px;padding:15px;font-size:12.5px;color:var(--muted);white-space:pre-wrap;line-height:1.6}
+
+  .prices{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .price-card{background:var(--navy2);border:1px solid var(--line);border-radius:var(--radius);padding:30px}
+  .price-card.feat{border-color:var(--gold);box-shadow:0 0 0 1px rgba(216,169,75,.3),0 20px 60px -30px rgba(216,169,75,.4)}
+  .tier{font-family:var(--sans);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700}
+  .amount{font-family:var(--serif);font-size:46px;margin:14px 0 4px}
+  .amount small{font-family:var(--sans);font-size:15px;color:var(--muted)}
+  .price-card p{color:var(--muted);font-size:14.5px;line-height:1.55;margin:6px 0 20px}
+
+  footer{border-top:1px solid var(--line);padding:40px;text-align:center;color:var(--muted);font-size:13.5px}
+
+  .banner{max-width:1120px;margin:22px auto 0;padding:12px 18px;border-radius:12px;font-size:13px;
+    background:rgba(216,169,75,.1);border:1px solid rgba(216,169,75,.3);color:#e7cd97}
+  .wrap-narrow{max-width:1120px;margin:0 auto;padding:70px 40px}
+
+  @media(max-width:860px){
+    .steps,.apis,.stats-grid,.prices{grid-template-columns:1fr;gap:16px}
+    .dash-grid{grid-template-columns:1fr}
+    header{padding:14px 20px}.wrap,.wrap-narrow{padding-left:20px;padding-right:20px}
+    nav a,nav .navlink{display:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="#" onclick="show('landing');return false;"><span class="mark">AH</span>API <em>Hub</em></a>
+  <nav>
+    <button class="navlink" onclick="show('catalog')">APIs</button>
+    <button class="navlink" onclick="show('pricing')">Pricing</button>
+    <span id="nav-auth"></span>
+  </nav>
+</header>
+
+<div class="banner" id="config-banner">⚙️ Demo mode. Add your Firebase config in <b>config.js</b> to make signup, keys, and credits live.</div>
+
+<!-- ================= LANDING ================= -->
+<div id="landing">
+  <section class="hero">
+    <div class="wrap">
+      <span class="label">One API key · Every service</span>
+      <h1>One key for<br/><span class="it">every API</span> you need</h1>
+      <p>Sign up, get 100 free credits, generate a single API key, and call any of our APIs for your daily tasks — sending email, creating docs, and more.</p>
+      <div class="cta">
+        <button class="btn gold arrow" onclick="show('auth')">Start free</button>
+        <button class="btn dark" onclick="show('catalog')">Explore APIs</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="on-cream block-pad">
+    <div class="wrap">
+      <div class="head">
+        <span class="label">How it works</span>
+        <h2>From signup to your first API call in minutes</h2>
+        <p class="lead">No cards, no setup headaches. One account, one key, one pool of credits that works across every API.</p>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="n">01</div><h3>Sign up free</h3><p>Create an account and instantly receive 100 free credits — no card required.</p></div>
+        <div class="step"><div class="n">02</div><h3>Generate a key</h3><p>Create your personal API key from the dashboard. It's shown once and stored securely.</p></div>
+        <div class="step"><div class="n">03</div><h3>Call any API</h3><p>Use the same key for every API. Credits are deducted automatically per call.</p></div>
+        <div class="step"><div class="n">04</div><h3>Scale up</h3><p>Out of credits? Subscribe to a plan and keep going without a hitch.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block-pad">
+    <div class="wrap">
+      <div class="head">
+        <span class="label">The catalog</span>
+        <h2>APIs for your daily tasks</h2>
+        <p class="lead">Every API below works with your single key. Pick one and start calling.</p>
+      </div>
+      <div id="landing-apis" class="apis"></div>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="wrap-narrow">
+      <div class="stats-grid">
+        <div class="stat"><div class="num">100</div><div class="cap">Free credits on signup</div></div>
+        <div class="stat"><div class="num">1</div><div class="cap">Key for every API</div></div>
+        <div class="stat"><div class="num">5</div><div class="cap">APIs live today</div></div>
+        <div class="stat"><div class="num">$0</div><div class="cap">To get started</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="on-cream block-pad center">
+    <div class="wrap">
+      <span class="label">Ready when you are</span>
+      <h2 style="font-size:clamp(30px,4.4vw,46px);margin:16px 0 22px">Start building today — it's free</h2>
+      <button class="btn gold arrow" onclick="show('auth')">Create your account</button>
+    </div>
+  </section>
+</div>
+
+<!-- ================= AUTH ================= -->
+<section id="auth" class="hidden wrap-narrow">
+  <div class="auth-card">
+    <h2 id="auth-title">Create your account</h2>
+    <div class="sub" id="auth-sub">Get 100 free credits — no card needed.</div>
+    <div id="auth-msg"></div>
+    <label>Email</label>
+    <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
+    <label>Password</label>
+    <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
+    <button class="btn gold block" style="margin-top:20px" id="auth-submit">Sign up</button>
+    <div class="switch"><span id="auth-switch-text">Already have an account?</span> <a href="#" id="auth-switch">Log in</a></div>
+  </div>
+</section>
+
+<!-- ================= DASHBOARD ================= -->
+<section id="dashboard" class="hidden wrap-narrow">
+  <span class="label">Your workspace</span>
+  <h2 style="font-size:36px;margin:14px 0 26px">Dashboard</h2>
+  <div class="dash-grid">
+    <div class="panel">
+      <h3>Credit balance</h3>
+      <div class="balance" id="balance">—</div>
+      <p style="color:var(--muted);font-size:13.5px;margin-top:12px">Free tier grants 100 credits on signup.</p>
+    </div>
+    <div class="panel">
+      <h3>Your API key</h3>
+      <div id="key-area">
+        <p style="color:var(--muted);font-size:14px;margin-top:0">Generate a key to start calling APIs.</p>
+        <button class="btn gold" onclick="createKey()">Generate API key</button>
+      </div>
+    </div>
+  </div>
+  <div class="panel" style="margin-bottom:20px">
+    <h3>Recent usage</h3>
+    <table>
+      <thead><tr><th>When</th><th>API</th><th>Credits</th><th>Status</th></tr></thead>
+      <tbody id="usage-body"><tr><td colspan="4" style="color:var(--muted)">No calls yet.</td></tr></tbody>
+    </table>
+  </div>
+  <div class="panel">
+    <h3>How to call an API</h3>
+    <div class="code" id="curl-sample">curl -X POST "https://YOUR-BACKEND.vercel.app/api/gateway/email" \
+  -H "x-api-key: YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "to":"a@b.com", "subject":"Hi {{name}}", "html":"&lt;b&gt;Hello&lt;/b&gt;", "variables":{"name":"Sam"} }'</div>
+  </div>
+</section>
+
+<!-- ================= CATALOG ================= -->
+<section id="catalog" class="hidden wrap-narrow">
+  <span class="label">The catalog</span>
+  <h2 style="font-size:36px;margin:14px 0 26px">All APIs</h2>
+  <div id="catalog-apis" class="apis"></div>
+</section>
+
+<!-- ================= PRICING ================= -->
+<section id="pricing" class="hidden wrap-narrow">
+  <div class="head">
+    <span class="label">Pricing</span>
+    <h2>Simple, credit-based pricing</h2>
+    <p class="lead">Start free. Upgrade only when you need more credits.</p>
+  </div>
+  <div class="prices">
+    <div class="price-card">
+      <span class="tier">Free</span>
+      <div class="amount">$0</div>
+      <p>100 credits on signup. No card needed.</p>
+      <button class="btn dark block" onclick="show('auth')">Get started</button>
+    </div>
+    <div class="price-card feat">
+      <span class="tier">Pro</span>
+      <div class="amount">$9<small>/mo</small></div>
+      <p>5,000 credits every month. Cancel anytime.</p>
+      <button class="btn gold block" onclick="subscribe()">Subscribe</button>
+    </div>
+    <div class="price-card">
+      <span class="tier">Scale</span>
+      <div class="amount">$29<small>/mo</small></div>
+      <p>20,000 credits monthly + priority support.</p>
+      <button class="btn dark block" onclick="subscribe()">Subscribe</button>
+    </div>
+  </div>
+  <p class="lead center" style="font-size:13px;margin-top:20px">Payments run through Stripe. Build and test the whole flow in Stripe test mode with no card, and go live only when you're ready to collect real money.</p>
+</section>
+
+<footer>© 2026 API Hub · One key for every API</footer>
+
+<script type="module" src="config.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

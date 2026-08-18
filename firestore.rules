@@ -1,0 +1,62 @@
+rules_version = '2';
+
+// ============================================================================
+// Firestore security rules for the API marketplace.
+// The browser (client SDK) can only READ a user's OWN data, and can never
+// write credits or keys directly — all writes that matter happen server-side
+// via the Vercel functions using the Firebase Admin SDK, which BYPASSES these
+// rules. So these rules are the safety net for direct browser access.
+// ============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+
+    // ---- profiles/{uid} : user can read their own profile, not write it ----
+    match /profiles/{uid} {
+      allow read: if isOwner(uid);
+      allow write: if false; // server only
+    }
+
+    // ---- credits/{uid} : user can read balance; never write it ----
+    match /credits/{uid} {
+      allow read: if isOwner(uid);
+      allow write: if false; // server only — credits are never client-writable
+    }
+
+    // ---- api_keys/{keyId} : user can read their own key metadata (not the raw key) ----
+    match /api_keys/{keyId} {
+      allow read: if signedIn() && resource.data.user_id == request.auth.uid;
+      allow write: if false; // server only
+    }
+
+    // ---- usage_logs / email_sends : user can read their own history ----
+    match /usage_logs/{id} {
+      allow read: if signedIn() && resource.data.user_id == request.auth.uid;
+      allow write: if false;
+    }
+    match /email_sends/{id} {
+      allow read: if signedIn() && resource.data.user_id == request.auth.uid;
+      allow write: if false;
+    }
+
+    // ---- apis : public catalog, read-only to everyone ----
+    match /apis/{slug} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ---- subscriptions : user reads own, server writes ----
+    match /subscriptions/{uid} {
+      allow read: if isOwner(uid);
+      allow write: if false;
+    }
+
+    // rate_limits are server-only, never client-accessible
+    match /rate_limits/{doc} {
+      allow read, write: if false;
+    }
+  }
+}
