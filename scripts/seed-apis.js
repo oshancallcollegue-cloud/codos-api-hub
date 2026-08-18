@@ -4,6 +4,10 @@
 //   node scripts/seed-apis.js
 // ============================================================================
 
+// Load local .env when running this script from your machine.
+// (On Vercel the env vars come from the dashboard, so this is harmless there.)
+try { require("dotenv").config(); } catch { /* dotenv optional */ }
+
 const { db } = require("../api/_lib/firebase");
 
 // Each service has its OWN price (credit_cost) and its OWN credit balance

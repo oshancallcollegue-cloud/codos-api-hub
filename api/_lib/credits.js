@@ -50,13 +50,29 @@ async function ensureUserSetup(userId, email) {
   if (!p.exists) {
     writes.push(profileRef.set({ email: email || null, plan: "free", created_at: admin.firestore.FieldValue.serverTimestamp() }));
   }
+  const FREE = { email: 50, gdocs: 25, sheets: 50, drive: 25, screenshot: 50 };
   if (!c.exists) {
-    // Each service starts with its own free balance.
+    // New user: grant each service its own free balance.
     writes.push(creditsRef.set({
-      balances: { email: 50, gdocs: 25, sheets: 50, drive: 25, screenshot: 50 },
+      balances: { ...FREE },
       free_granted: true,
       updated_at: admin.firestore.FieldValue.serverTimestamp(),
     }));
+  } else {
+    // Existing user (maybe old single-balance style, or missing a new service):
+    // heal any service that has no balance yet, without touching existing ones.
+    const existing = c.data().balances || {};
+    const patched = { ...existing };
+    let changed = false;
+    for (const [svc, amt] of Object.entries(FREE)) {
+      if (patched[svc] == null) { patched[svc] = amt; changed = true; }
+    }
+    if (changed) {
+      writes.push(creditsRef.set({
+        balances: patched,
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true }));
+    }
   }
   await Promise.all(writes);
 }
